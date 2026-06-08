@@ -7,6 +7,9 @@ export const config = {
     "/hidden-winners/:path*",
     "/early-warning/:path*",
     "/copilot/:path*",
-    "/profile/:path*"
+    "/profile/:path*",
+    "/api/company/analyze/:path*",
+    "/api/copilot/:path*",
+    "/api/forecast/:path*"
   ]
 };

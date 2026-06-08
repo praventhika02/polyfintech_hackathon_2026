@@ -24,9 +24,23 @@ create table if not exists public.alert_subscriptions (
   unique (user_id, alert_type)
 );
 
+create table if not exists public.analysis_history (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  ticker text not null,
+  company_name text not null,
+  current_score numeric,
+  forecast_score numeric,
+  momentum_score numeric,
+  confidence_score numeric,
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 alter table public.profiles enable row level security;
 alter table public.watchlists enable row level security;
 alter table public.alert_subscriptions enable row level security;
+alter table public.analysis_history enable row level security;
 
 create policy "Users can read own profile"
   on public.profiles for select
@@ -44,6 +58,11 @@ create policy "Users can manage own watchlist"
 
 create policy "Users can manage own alert subscriptions"
   on public.alert_subscriptions for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Users can manage own analysis history"
+  on public.analysis_history for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 

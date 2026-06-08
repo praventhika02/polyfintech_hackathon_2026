@@ -3,12 +3,19 @@ import { Activity, ArrowUpRight, ShieldAlert, Sparkles } from "lucide-react";
 import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/session";
+import { analyzeUniverse } from "@/lib/esg/data";
+import { CompanySearch } from "@/components/dashboard/CompanySearch";
+import { ForecastChart } from "@/components/charts/ForecastChart";
 
 export default async function DashboardPage({ searchParams }: { searchParams: { welcome?: string } }) {
   const user = await requireUser();
   const supabase = createClient();
   const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).single();
   const name = profile?.name || user.user_metadata?.name || user.email?.split("@")[0] || "Investor";
+  const universe = await analyzeUniverse(8);
+  const leader = universe[0];
+  const hiddenCount = universe.filter((company) => company.classification === "Hidden Winner").length;
+  const riskCount = universe.filter((company) => company.risks.length > 0).length;
 
   return (
     <main className="page">
@@ -20,36 +27,37 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         </div>
         <Link className="secondary-btn" style={{ width: "auto", padding: "0 16px" }} href="/profile">Profile</Link>
       </div>
+      <CompanySearch />
       <section className="grid">
-        <div className="card"><span>Current ESG Signal</span><strong>74</strong></div>
-        <div className="card"><span>12-Month Forecast</span><strong>82</strong></div>
-        <div className="card"><span>Momentum Score</span><strong>+18</strong></div>
-        <div className="card"><span>Confidence</span><strong>87%</strong></div>
+        <div className="card"><span>Top Current Signal</span><strong>{leader?.currentScore ?? "--"}</strong></div>
+        <div className="card"><span>Top Forecast</span><strong>{leader?.forecastScore ?? "--"}</strong></div>
+        <div className="card"><span>Hidden Winners</span><strong>{hiddenCount}</strong></div>
+        <div className="card"><span>Risk Flags</span><strong>{riskCount}</strong></div>
       </section>
       <section className="dashboard-layout" style={{ marginTop: 18 }}>
         <div className="profile-panel">
-          <h2>Live intelligence workspace</h2>
+          <h2>ESG Momentum Radar</h2>
           <div className="list">
-            {[
-              ["Hidden Winners Radar", "Find low-rated companies with improving ESG momentum.", "/hidden-winners", Sparkles],
-              ["Early Warning", "Track negative governance, emissions, and labour signals.", "/early-warning", ShieldAlert],
-              ["Company Intelligence", "Open a company digital twin by ticker.", "/company/TSLA", Activity],
-              ["AI Copilot", "Ask evidence-grounded questions about stored ESG analysis.", "/copilot", ArrowUpRight]
-            ].map(([title, body, href, Icon]) => (
-              <Link className="list-row" href={href as string} key={title as string}>
+            {universe.map((company) => (
+              <Link className="list-row" href={`/company/${encodeURIComponent(company.ticker)}`} key={company.ticker}>
                 <div>
-                  <strong>{title as string}</strong>
-                  <span style={{ display: "block", color: "var(--muted)" }}>{body as string}</span>
+                  <strong>{company.name}</strong>
+                  <span style={{ display: "block", color: "var(--muted)" }}>{company.classification} · {company.sector} · {company.country}</span>
                 </div>
-                <Icon size={20} />
+                <strong>{company.momentumScore > 0 ? "+" : ""}{company.momentumScore}</strong>
               </Link>
             ))}
           </div>
         </div>
         <div className="profile-panel">
-          <h2>Investor signal</h2>
-          <p style={{ color: "var(--muted)", lineHeight: 1.6 }}>Watch. Positive alternative-data coverage is improving, but confidence should be validated with recent company-level analysis.</p>
-          <Link className="primary-btn" href="/company/DBS">Analyze DBS</Link>
+          <h2>{leader ? `${leader.name} forecast` : "Forecast"}</h2>
+          {leader ? <ForecastChart data={leader.forecast} /> : null}
+          <div className="quick-links">
+            <Link href="/hidden-winners"><Sparkles size={17} /> Hidden Winners</Link>
+            <Link href="/early-warning"><ShieldAlert size={17} /> Early Warning</Link>
+            <Link href="/company/TSLA"><Activity size={17} /> Company Twin</Link>
+            <Link href="/copilot"><ArrowUpRight size={17} /> Copilot</Link>
+          </div>
         </div>
       </section>
     </main>
