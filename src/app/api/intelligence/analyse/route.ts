@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+import { companyDiscoveryService } from "@/services/company/service";
+import { intelligenceService } from "@/services/intelligence/service";
+import { createApiResponse } from "@/utils/api-response";
+import type { CompanyProfile, EvidenceCollection, EvidenceItem } from "@/types";
+
+type AnalyseBody = {
+  company?: CompanyProfile;
+  ticker?: string;
+  evidence?: EvidenceCollection | EvidenceItem[];
+};
+
+export async function POST(request: Request) {
+  const body = await request.json() as AnalyseBody;
+  let company = body.company;
+
+  if (!company && body.ticker) {
+    const metadata = await companyDiscoveryService.metadata(body.ticker);
+    company = metadata.company || undefined;
+  }
+
+  if (!company) {
+    return NextResponse.json(createApiResponse({ status: "error", message: "Company not found in supported providers." }), { status: 404 });
+  }
+
+  const result = await intelligenceService.analyse({ company, evidence: body.evidence });
+  return NextResponse.json(createApiResponse(result, "POST /api/intelligence/analyse"));
+}

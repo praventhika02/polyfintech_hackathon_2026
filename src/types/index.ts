@@ -12,6 +12,17 @@ export type {
   EvidenceSourceStatus
 } from "./evidence";
 export type { ForecastPoint, ForecastScenario } from "./forecast";
+export type {
+  ClassifiedEvidence,
+  DataAvailabilityReport,
+  DigitalEsgBreakdown,
+  ESGIntelligenceResult,
+  EsgCategory,
+  EvidenceCluster,
+  IntelligenceClassification,
+  IntelligenceInput,
+  InvestorVerdict
+} from "./intelligence";
 export type { DynamicUniverse, ESGSignal, MarketScan, MarketSignal, MarketTrend, SectorScanRequest } from "./market";
 export type { IntelligenceUnavailable, MomentumClass, MomentumResult, MomentumScore } from "./momentum";
 export type { PortfolioAnalysis, PortfolioHolding } from "./portfolio";
