@@ -1,0 +1,14 @@
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3030
+
+ ✓ Starting...
+ ✓ Ready in 1960ms
+ ○ Compiling /compare ...
+ ✓ Compiled /investigate in 5.1s (1592 modules)
+ HEAD /investigate 200 in 1057ms
+ HEAD /watchlist 200 in 1961ms
+ HEAD /compare 200 in 5501ms
+ HEAD /methodology 200 in 3314ms
+ ○ Compiling /investigate/[company] ...
+ ✓ Compiled /investigate/[company] in 1549ms (2357 modules)
+ HEAD /investigate/TSLA 200 in 7361ms

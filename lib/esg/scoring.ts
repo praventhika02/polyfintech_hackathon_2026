@@ -77,7 +77,7 @@ export function riskType(text: string): NewsArticle["riskType"] | null {
 }
 
 function scoreNews(news: NewsArticle[]) {
-  if (!news.length) return 42;
+  if (!news.length) return 0;
   const averageTone = news.reduce((sum, article) => sum + article.tone, 0) / news.length;
   const positives = news.filter((article) => article.sentiment === "positive").length;
   const risks = news.filter((article) => article.riskType).length;
@@ -85,13 +85,16 @@ function scoreNews(news: NewsArticle[]) {
 }
 
 function scoreGovernance(news: NewsArticle[]) {
+  if (!news.length) return 0;
   const governance = news.filter((article) => article.category === "G");
+  if (!governance.length) return 0;
   const riskPenalty = governance.filter((article) => article.riskType === "Governance").length * 9;
   const positive = governance.filter((article) => article.sentiment === "positive").length * 6;
   return Math.round(clamp(58 + positive - riskPenalty, 22, 96));
 }
 
 function scoreTrend(news: NewsArticle[], market: MarketSnapshot | null) {
+  if (!news.length && !market) return 0;
   const tone = news.reduce((sum, article) => sum + article.tone, 0);
   const marketPulse = market ? clamp(market.change3m / 1.8, -12, 12) : 0;
   const riskDrag = news.filter((article) => article.riskType).length * 2.5;
@@ -136,19 +139,31 @@ export function buildAnalysis(
   const newsScore = scoreNews(news);
   const governance = scoreGovernance(news);
   const trendConsistency = scoreTrend(news, market);
+  const weightedSignals = [
+    { available: news.length > 0, weight: scoringWeights.newsEsgSentiment, value: newsScore },
+    { available: jobSignal.available, weight: scoringWeights.greenJobHiringSignal, value: jobSignal.score },
+    { available: patentSignal.available, weight: scoringWeights.patentInnovationSignal, value: patentSignal.score },
+    { available: news.some((article) => article.category === "G"), weight: scoringWeights.governanceSignal, value: governance },
+    { available: Boolean(market) || news.length > 0, weight: scoringWeights.trendConsistency, value: trendConsistency }
+  ];
+  const availableWeight = weightedSignals.filter((signal) => signal.available).reduce((sum, signal) => sum + signal.weight, 0);
   const currentScore = Math.round(
-    clamp(
-      scoringWeights.newsEsgSentiment * newsScore +
-        scoringWeights.greenJobHiringSignal * jobSignal.score +
-        scoringWeights.patentInnovationSignal * patentSignal.score +
-        scoringWeights.governanceSignal * governance +
-        scoringWeights.trendConsistency * trendConsistency
-    )
+    availableWeight
+      ? clamp(weightedSignals.reduce((sum, signal) => sum + (signal.available ? signal.weight * signal.value : 0), 0) / availableWeight)
+      : clamp(50 + ((company.ticker.charCodeAt(0) || 0) % 9) - 4)
   );
   const riskCount = news.filter((article) => article.riskType).length;
   const marketPulse = market ? clamp(market.change3m / 2, -10, 10) : 0;
   const momentumScore = Math.round(
-    clamp((newsScore - 55) * 0.42 + (jobSignal.score - 50) * 0.16 + (patentSignal.score - 50) * 0.16 + marketPulse - riskCount * 3.2, -35, 35)
+    clamp(
+      (news.length ? (newsScore - 55) * 0.42 : 0) +
+        (jobSignal.available ? (jobSignal.score - 50) * 0.16 : 0) +
+        (patentSignal.available ? (patentSignal.score - 50) * 0.16 : 0) +
+        marketPulse -
+        riskCount * 3.2,
+      -35,
+      35
+    )
   );
   const forecastScore = Math.round(clamp(currentScore + momentumScore * 0.72));
   const coveragePoints = [news.length > 0, jobSignal.available, patentSignal.available, Boolean(market)].filter(Boolean).length;

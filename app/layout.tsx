@@ -6,14 +6,14 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const sora = Sora({ subsets: ["latin"], variable: "--font-sora" });
 
 export const metadata: Metadata = {
-  title: "ESG Alpha Digital Twin",
-  description: "Forward-looking ESG intelligence for investors."
+  title: "ESG Pulse 360",
+  description: "Forward-looking ESG momentum intelligence for investors."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${sora.variable}`}>{children}</body>
+    <html lang="en" className={`${inter.variable} ${sora.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

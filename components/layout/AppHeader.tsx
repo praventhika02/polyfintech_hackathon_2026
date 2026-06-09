@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Activity, Radar } from "lucide-react";
 
 const links = [
-  ["Dashboard", "/dashboard"],
-  ["Hidden Winners", "/hidden-winners"],
-  ["Early Warning", "/early-warning"],
-  ["Copilot", "/copilot"],
+  ["Investigate", "/investigate"],
+  ["Radar", "/radar"],
+  ["Compare", "/compare"],
+  ["Watchlist", "/watchlist"],
   ["Methodology", "/methodology"]
 ];
 
@@ -15,8 +15,8 @@ export function AppHeader() {
       <Link className="brand-lockup compact" href="/">
         <span className="brand-mark"><Radar size={21} /></span>
         <span>
-          <strong>ESG Alpha</strong>
-          <small>Digital Twin</small>
+          <strong>ESG Pulse 360</strong>
+          <small>Momentum intelligence</small>
         </span>
       </Link>
       <nav className="nav-links" aria-label="Primary">
@@ -26,9 +26,9 @@ export function AppHeader() {
           </Link>
         ))}
       </nav>
-      <Link className="nav-action" href="/dashboard">
+      <Link className="nav-action" href="/investigate">
         <Activity size={17} />
-        Analyze
+        Start scan
       </Link>
     </header>
   );

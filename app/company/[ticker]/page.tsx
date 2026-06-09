@@ -1,20 +1,5 @@
-import { AnalysisView } from "@/components/dashboard/AnalysisView";
-import { CompanySearch } from "@/components/dashboard/CompanySearch";
-import { AppHeader } from "@/components/layout/AppHeader";
-import { analyzeCompany } from "@/lib/esg/data";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function CompanyPage({ params }: { params: { ticker: string } }) {
-  const analysis = await analyzeCompany(decodeURIComponent(params.ticker));
-
-  return (
-    <>
-      <AppHeader />
-      <main className="page">
-        <CompanySearch compact defaultValue={decodeURIComponent(params.ticker)} />
-        <AnalysisView analysis={analysis} />
-      </main>
-    </>
-  );
+export default function CompanyCompatPage({ params }: { params: { ticker: string } }) {
+  redirect(`/investigate/${encodeURIComponent(params.ticker)}`);
 }

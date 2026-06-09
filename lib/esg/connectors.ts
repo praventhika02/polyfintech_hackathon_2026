@@ -130,7 +130,7 @@ export async function fetchJobSignal(company: CompanyProfile): Promise<JobSignal
   if (!appId || !appKey) {
     return {
       available: false,
-      score: 45,
+      score: 0,
       count: 0,
       source: "Adzuna API",
       reason: "Adzuna credentials are not configured, so hiring confidence is reduced."
@@ -157,7 +157,7 @@ export async function fetchJobSignal(company: CompanyProfile): Promise<JobSignal
         reason: count ? `${count} sustainability-adjacent postings found.` : "No matching sustainability hiring signal found."
       };
     } catch {
-      return { available: false, score: 45, count: 0, source: "Adzuna API", reason: "Job API request failed." };
+      return { available: false, score: 0, count: 0, source: "Adzuna API", reason: "Job API request failed." };
     }
   });
 }
@@ -180,7 +180,7 @@ export async function fetchPatentSignal(company: CompanyProfile): Promise<Patent
     } catch {
       return {
         available: false,
-        score: 45,
+        score: 0,
         count: 0,
         source: "PatentsView",
         reason: "Patent signal unavailable. Add PATENTSVIEW_API_KEY if your endpoint requires one."
