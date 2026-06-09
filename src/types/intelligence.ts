@@ -15,12 +15,18 @@ export type InvestorVerdict = "BUY SIGNAL" | "WATCH" | "HOLD" | "AVOID" | "INSUF
 export type ClassifiedEvidence = {
   evidenceId: string;
   category: EsgCategory;
+  classification: EsgCategory;
   classificationConfidence: number;
   classificationMethod: "local_huggingface" | "keyword_fallback";
+  modelMode: "local_huggingface" | "keyword_fallback";
+  modelName: string;
+  runtimeStatus: "loaded" | "not_loaded" | "unsupported" | "error" | "fallback";
   sentiment: {
     label: SentimentLabel;
     confidence: number;
     method: "local_huggingface" | "keyword_fallback";
+    modelName: string;
+    runtimeStatus: "loaded" | "not_loaded" | "unsupported" | "error" | "fallback";
   };
   weightedSignal: number;
   sourceWeight: number;
@@ -29,12 +35,21 @@ export type ClassifiedEvidence = {
 };
 
 export type MlModelLoadStatus = "loaded" | "not_loaded";
+export type MlModelRuntimeStatus = "loaded" | "not_loaded" | "unsupported" | "error";
+
+export type MlModelHealth = {
+  status: MlModelRuntimeStatus;
+  modelId: string;
+  runtimeModelId: string;
+  mode: "local_huggingface" | "keyword_fallback";
+  error: string | null;
+};
 
 export type MlRuntimeHealth = {
   status: "ok";
   mlRuntime: {
     enabled: boolean;
-    mode: "local_huggingface" | "keyword_fallback";
+    mode: "local_huggingface" | "mixed" | "keyword_fallback";
     runtime: "xenova_transformers" | "unavailable";
     fallbackActive: boolean;
     dependencyInstalled: boolean;
@@ -43,11 +58,11 @@ export type MlRuntimeHealth = {
     env: Record<string, string | boolean | null>;
     loadError: string | null;
     models: {
-      finbert_esg: MlModelLoadStatus;
-      finbert_sentiment: MlModelLoadStatus;
-      bart_mnli: MlModelLoadStatus;
-      bart_cnn: MlModelLoadStatus;
-      minilm: MlModelLoadStatus;
+      finbert_esg: MlModelHealth;
+      finbert_sentiment: MlModelHealth;
+      bart_mnli: MlModelHealth;
+      bart_cnn: MlModelHealth;
+      minilm: MlModelHealth;
     };
   };
 };

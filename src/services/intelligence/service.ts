@@ -98,16 +98,16 @@ function classifyItemByKeywords(item: EvidenceItem): Pick<ClassifiedEvidence, "c
   }));
   const best = scores.sort((a, b) => b.hits - a.hits)[0];
   if (!best || best.hits === 0) return { category: "Non-ESG", classificationConfidence: 0.15 };
-  return { category: best.category, classificationConfidence: Math.min(0.55, 0.28 + best.hits * 0.06 + confidenceNumber(item) * 0.08) };
+  return { category: best.category, classificationConfidence: Math.min(0.45, 0.24 + best.hits * 0.04 + confidenceNumber(item) * 0.06) };
 }
 
 function sentimentForKeywords(item: EvidenceItem): ClassifiedEvidence["sentiment"] {
   const lower = textOf(item).toLowerCase();
   const positives = POSITIVE_WORDS.filter((word) => lower.includes(word)).length;
   const negatives = NEGATIVE_WORDS.filter((word) => lower.includes(word)).length;
-  if (negatives > positives) return { label: "Negative", confidence: Math.min(0.58, 0.38 + negatives * 0.05), method: "keyword_fallback" };
-  if (positives > negatives) return { label: "Positive", confidence: Math.min(0.58, 0.38 + positives * 0.04), method: "keyword_fallback" };
-  return { label: "Neutral", confidence: 0.45, method: "keyword_fallback" };
+  if (negatives > positives) return { label: "Negative", confidence: Math.min(0.45, 0.34 + negatives * 0.03), method: "keyword_fallback", modelName: "keyword_fallback", runtimeStatus: "fallback" };
+  if (positives > negatives) return { label: "Positive", confidence: Math.min(0.45, 0.34 + positives * 0.025), method: "keyword_fallback", modelName: "keyword_fallback", runtimeStatus: "fallback" };
+  return { label: "Neutral", confidence: 0.4, method: "keyword_fallback", modelName: "keyword_fallback", runtimeStatus: "fallback" };
 }
 
 function clusterEvidence(items: EvidenceItem[]): EvidenceCluster[] {
@@ -268,13 +268,18 @@ export class IntelligenceService {
         ? { ...modelSentiment, method: "local_huggingface" as const }
         : fallbackSentiment;
       const classificationMethod = modelClassification ? "local_huggingface" as const : "keyword_fallback" as const;
+      const esgModelState = localModelRegistry.modelState("esgClassifier");
       const sourceWeight = SOURCE_WEIGHTS[item.source] || 1;
       const recent = recencyWeight(item);
       const weightedSignal = sentimentValue(sentiment.label) * sentiment.confidence * classification.classificationConfidence * sourceWeight * recent;
       return {
         evidenceId: item.id,
         ...classification,
+        classification: classification.category,
         classificationMethod,
+        modelMode: classificationMethod,
+        modelName: modelClassification?.modelName || "keyword_fallback",
+        runtimeStatus: modelClassification?.runtimeStatus || (esgModelState.status === "loaded" ? "fallback" : esgModelState.status),
         sentiment,
         weightedSignal: Number(weightedSignal.toFixed(4)),
         sourceWeight,
