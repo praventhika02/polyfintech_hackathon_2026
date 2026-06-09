@@ -20,13 +20,13 @@ export type ClassifiedEvidence = {
   classificationMethod: "local_huggingface" | "keyword_fallback";
   modelMode: "local_huggingface" | "keyword_fallback";
   modelName: string;
-  runtimeStatus: "loaded" | "not_loaded" | "unsupported" | "error" | "fallback";
+  runtimeStatus: "loaded" | "loading" | "not_loaded" | "unsupported" | "error" | "fallback";
   sentiment: {
     label: SentimentLabel;
     confidence: number;
     method: "local_huggingface" | "keyword_fallback";
     modelName: string;
-    runtimeStatus: "loaded" | "not_loaded" | "unsupported" | "error" | "fallback";
+    runtimeStatus: "loaded" | "loading" | "not_loaded" | "unsupported" | "error" | "fallback";
   };
   weightedSignal: number;
   sourceWeight: number;
@@ -35,7 +35,7 @@ export type ClassifiedEvidence = {
 };
 
 export type MlModelLoadStatus = "loaded" | "not_loaded";
-export type MlModelRuntimeStatus = "loaded" | "not_loaded" | "unsupported" | "error";
+export type MlModelRuntimeStatus = "loaded" | "loading" | "not_loaded" | "unsupported" | "error";
 
 export type MlModelHealth = {
   status: MlModelRuntimeStatus;

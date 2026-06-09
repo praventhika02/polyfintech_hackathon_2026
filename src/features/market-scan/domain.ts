@@ -1,5 +1,5 @@
-import type { DynamicUniverse, SectorScanRequest } from "@/types";
+import type { MarketScanRequest, MarketScanResult } from "@/types";
 
 export type MarketScanEngine = {
-  runScan(request: SectorScanRequest): Promise<DynamicUniverse>;
+  runScan(request: MarketScanRequest): Promise<MarketScanResult>;
 };

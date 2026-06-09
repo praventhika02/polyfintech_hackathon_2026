@@ -24,7 +24,24 @@ export type {
   InvestorVerdict,
   MlRuntimeHealth
 } from "./intelligence";
-export type { DynamicUniverse, ESGSignal, MarketScan, MarketSignal, MarketTrend, SectorScanRequest } from "./market";
+export type {
+  CountryMomentumSummary,
+  DynamicUniverse,
+  ESGSignal,
+  MarketScan,
+  MarketScanCompanyResult,
+  MarketScanRequest,
+  MarketScanResult,
+  MarketScanType,
+  MarketSignal,
+  MarketTrend,
+  MarketUniverse,
+  MarketUniverseCompany,
+  RadarSummary,
+  ScanStatus,
+  SectorMomentumSummary,
+  SectorScanRequest
+} from "./market";
 export type { IntelligenceUnavailable, MomentumClass, MomentumResult, MomentumScore } from "./momentum";
 export type { PortfolioAnalysis, PortfolioHolding } from "./portfolio";
 export type { RiskAlert, RiskSeverity } from "./risk";

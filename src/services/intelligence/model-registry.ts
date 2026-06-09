@@ -1,6 +1,6 @@
 import { existsSync } from "fs";
 import path from "path";
-import type { EsgCategory, MlModelHealth, MlRuntimeHealth, SentimentLabel } from "@/types/intelligence";
+import type { EsgCategory, MlModelHealth, MlModelRuntimeStatus, MlRuntimeHealth, SentimentLabel } from "@/types/intelligence";
 
 export const LOCAL_HF_MODELS = {
   esgClassifier: "yiyanghkust/finbert-esg",
@@ -14,7 +14,6 @@ type ModelKey = keyof typeof LOCAL_HF_MODELS;
 type HealthKey = keyof MlRuntimeHealth["mlRuntime"]["models"];
 type PipelineOutput = { label: string; score: number };
 type PipelineFunction = (input: string | string[], options?: Record<string, unknown>) => Promise<unknown>;
-type PipelineMap = Partial<Record<ModelKey, PipelineFunction>>;
 type TransformersModule = {
   env: {
     allowRemoteModels: boolean;
@@ -34,7 +33,13 @@ type ModelConfig = {
 
 type ModelState = MlModelHealth & {
   task: string;
+  startedAt: string | null;
+  finishedAt: string | null;
 };
+
+type ClassifiedRuntimeStatus = "loaded" | "loading" | "not_loaded" | "unsupported" | "error" | "fallback";
+
+const MODEL_LOAD_TIMEOUT_MS = 10_000;
 
 const MODEL_CONFIG: Record<ModelKey, ModelConfig> = {
   esgClassifier: {
@@ -76,7 +81,9 @@ function defaultModelState(config: ModelConfig): ModelState {
     modelId: config.modelId,
     runtimeModelId: config.runtimeModelId,
     mode: "keyword_fallback",
-    error: null
+    error: null,
+    startedAt: null,
+    finishedAt: null
   };
 }
 
@@ -102,7 +109,7 @@ function dependencyPath(): string {
   return path.join(process.cwd(), "node_modules", "@xenova", "transformers");
 }
 
-function modelErrorStatus(error: Error): "unsupported" | "error" {
+function modelErrorStatus(error: Error): Extract<MlModelRuntimeStatus, "unsupported" | "error"> {
   const message = error.message.toLowerCase();
   if (message.includes("unsupported") || message.includes("no available model") || message.includes("could not locate file") || message.includes("onnx")) {
     return "unsupported";
@@ -110,30 +117,39 @@ function modelErrorStatus(error: Error): "unsupported" | "error" {
   return "error";
 }
 
+function timeoutPromise(modelId: string): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Model loading timed out after ${MODEL_LOAD_TIMEOUT_MS / 1000}s: ${modelId}`)), MODEL_LOAD_TIMEOUT_MS);
+  });
+}
+
 class LocalModelRegistry {
-  private loadPromise: Promise<PipelineMap> | null = null;
+  private transformersPromise: Promise<TransformersModule | null> | null = null;
   private loadError: string | null = null;
+  private pipelines: Partial<Record<ModelKey, PipelineFunction>> = {};
+  private modelPromises: Partial<Record<ModelKey, Promise<void>>> = {};
   private modelStates = Object.fromEntries(
     Object.entries(MODEL_CONFIG).map(([key, config]) => [key, defaultModelState(config)])
   ) as Record<ModelKey, ModelState>;
   private readonly modelNames = Object.values(LOCAL_HF_MODELS);
 
-  async loadOnce(): Promise<PipelineMap> {
-    if (!this.loadPromise) {
-      this.loadPromise = this.loadLocalPipelines();
-    }
-    return this.loadPromise;
-  }
-
   names(): string[] {
     return this.modelNames;
   }
 
+  startBackgroundLoading(): void {
+    if (process.env.ENABLE_LOCAL_HF_PIPELINES !== "true") return;
+    for (const key of Object.keys(MODEL_CONFIG) as ModelKey[]) {
+      this.ensureModelLoading(key);
+    }
+  }
+
   async classifyEsg(text: string): Promise<{ category: EsgCategory; confidence: number; modelName: string; runtimeStatus: ClassifiedRuntimeStatus } | null> {
-    const pipelines = await this.loadOnce();
+    this.ensureModelLoading("esgClassifier");
     const state = this.modelStates.esgClassifier;
-    if (!pipelines.esgClassifier || state.status !== "loaded") return null;
-    const output = normalizePipelineOutput(await pipelines.esgClassifier(text));
+    const pipeline = this.pipelines.esgClassifier;
+    if (!pipeline || state.status !== "loaded") return null;
+    const output = normalizePipelineOutput(await pipeline(text));
     if (!output) return null;
     const label = output.label.toLowerCase();
     const category = label.includes("environment") ? "Environmental" : label.includes("social") ? "Social" : label.includes("governance") ? "Governance" : "Non-ESG";
@@ -141,10 +157,11 @@ class LocalModelRegistry {
   }
 
   async classifySentiment(text: string): Promise<{ label: SentimentLabel; confidence: number; modelName: string; runtimeStatus: ClassifiedRuntimeStatus } | null> {
-    const pipelines = await this.loadOnce();
+    this.ensureModelLoading("sentiment");
     const state = this.modelStates.sentiment;
-    if (!pipelines.sentiment || state.status !== "loaded") return null;
-    const output = normalizePipelineOutput(await pipelines.sentiment(text));
+    const pipeline = this.pipelines.sentiment;
+    if (!pipeline || state.status !== "loaded") return null;
+    const output = normalizePipelineOutput(await pipeline(text));
     if (!output) return null;
     const label = output.label.toLowerCase();
     const sentiment = label.includes("positive") ? "Positive" : label.includes("negative") ? "Negative" : "Neutral";
@@ -155,9 +172,12 @@ class LocalModelRegistry {
     return this.modelStates[key];
   }
 
-  async health(): Promise<MlRuntimeHealth> {
+  health(): MlRuntimeHealth {
     const enabled = process.env.ENABLE_LOCAL_HF_PIPELINES === "true";
-    await this.loadOnce();
+    if (enabled) {
+      this.startBackgroundLoading();
+    }
+
     const states: MlRuntimeHealth["mlRuntime"]["models"] = {
       finbert_esg: this.modelStates.esgClassifier,
       finbert_sentiment: this.modelStates.sentiment,
@@ -166,7 +186,12 @@ class LocalModelRegistry {
       minilm: this.modelStates.embeddings
     };
     const loadedCount = Object.values(states).filter((state) => state.status === "loaded").length;
-    const mode = loadedCount === Object.keys(states).length ? "local_huggingface" : loadedCount > 0 ? "mixed" : "keyword_fallback";
+    const loadingCount = Object.values(states).filter((state) => state.status === "loading").length;
+    const mode = loadedCount === Object.keys(states).length
+      ? "local_huggingface"
+      : loadedCount > 0 || loadingCount > 0
+        ? "mixed"
+        : "keyword_fallback";
 
     return {
       status: "ok",
@@ -197,74 +222,96 @@ class LocalModelRegistry {
     };
   }
 
-  private async loadLocalPipelines(): Promise<PipelineMap> {
-    this.modelStates = Object.fromEntries(
-      Object.entries(MODEL_CONFIG).map(([key, config]) => [key, defaultModelState(config)])
-    ) as Record<ModelKey, ModelState>;
-
-    if (process.env.ENABLE_LOCAL_HF_PIPELINES !== "true") {
-      return {};
+  private ensureModelLoading(key: ModelKey): void {
+    if (process.env.ENABLE_LOCAL_HF_PIPELINES !== "true") return;
+    const state = this.modelStates[key];
+    if (state.status === "loaded" || state.status === "loading" || state.status === "unsupported" || state.status === "error") {
+      return;
     }
 
+    const config = MODEL_CONFIG[key];
+    this.modelStates[key] = {
+      ...state,
+      status: "loading",
+      mode: "keyword_fallback",
+      error: null,
+      startedAt: new Date().toISOString(),
+      finishedAt: null
+    };
+
+    this.modelPromises[key] = this.loadModel(key, config).catch(() => {
+      // loadModel records terminal state; this catch prevents unhandled rejections.
+    });
+  }
+
+  private async transformers(): Promise<TransformersModule | null> {
+    if (!this.transformersPromise) {
+      this.transformersPromise = this.importTransformers();
+    }
+    return this.transformersPromise;
+  }
+
+  private async importTransformers(): Promise<TransformersModule | null> {
     try {
       const importer = new Function("specifier", "return import(specifier)") as (specifier: string) => Promise<unknown>;
       const module = await importer("@xenova/transformers");
       if (!isTransformersModule(module)) {
         this.loadError = "@xenova/transformers did not expose the expected pipeline runtime.";
-        this.markAll("error", this.loadError);
-        return {};
+        return null;
       }
-
       module.env.allowLocalModels = true;
       module.env.allowRemoteModels = process.env.HF_ALLOW_REMOTE_MODEL_DOWNLOAD !== "false";
       module.env.cacheDir = cachePath();
       module.env.localModelPath = cachePath();
-
-      const pipelines: PipelineMap = {};
-      for (const key of Object.keys(MODEL_CONFIG) as ModelKey[]) {
-        const config = MODEL_CONFIG[key];
-        try {
-          pipelines[key] = await module.pipeline(config.task, config.runtimeModelId);
-          this.modelStates[key] = {
-            ...defaultModelState(config),
-            status: "loaded",
-            mode: "local_huggingface",
-            error: null
-          };
-        } catch (error) {
-          const message = error instanceof Error ? error.message : "Model loading failed.";
-          this.modelStates[key] = {
-            ...defaultModelState(config),
-            status: error instanceof Error ? modelErrorStatus(error) : "error",
-            mode: "keyword_fallback",
-            error: message
-          };
-        }
-      }
-      const loadedCount = Object.values(this.modelStates).filter((state) => state.status === "loaded").length;
-      this.loadError = loadedCount ? null : "No local HuggingFace-compatible models loaded. Keyword fallback is active.";
-      return pipelines;
+      return module;
     } catch (error) {
-      this.loadError = error instanceof Error ? error.message : "Local HuggingFace runtime loading failed.";
-      this.markAll("error", this.loadError);
-      return {};
+      this.loadError = error instanceof Error ? error.message : "Local HuggingFace runtime import failed.";
+      return null;
     }
   }
 
-  private markAll(status: "unsupported" | "error", error: string): void {
-    this.modelStates = Object.fromEntries(
-      Object.entries(MODEL_CONFIG).map(([key, config]) => [
-        key,
-        {
-          ...defaultModelState(config),
-          status,
-          error
-        }
-      ])
-    ) as Record<ModelKey, ModelState>;
+  private async loadModel(key: ModelKey, config: ModelConfig): Promise<void> {
+    const module = await this.transformers();
+    if (!module) {
+      this.setTerminalState(key, "error", this.loadError || "Local HuggingFace runtime is unavailable.");
+      return;
+    }
+
+    try {
+      this.pipelines[key] = await Promise.race([
+        module.pipeline(config.task, config.runtimeModelId),
+        timeoutPromise(config.runtimeModelId)
+      ]);
+      this.modelStates[key] = {
+        ...defaultModelState(config),
+        status: "loaded",
+        mode: "local_huggingface",
+        error: null,
+        startedAt: this.modelStates[key].startedAt,
+        finishedAt: new Date().toISOString()
+      };
+      this.loadError = null;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Model loading failed.";
+      this.setTerminalState(key, error instanceof Error ? modelErrorStatus(error) : "error", message);
+    }
+  }
+
+  private setTerminalState(key: ModelKey, status: Extract<MlModelRuntimeStatus, "unsupported" | "error">, error: string): void {
+    const config = MODEL_CONFIG[key];
+    this.modelStates[key] = {
+      ...defaultModelState(config),
+      status,
+      mode: "keyword_fallback",
+      error,
+      startedAt: this.modelStates[key].startedAt,
+      finishedAt: new Date().toISOString()
+    };
+    delete this.modelPromises[key];
+    this.loadError = Object.values(this.modelStates).some((state) => state.status === "loaded")
+      ? null
+      : "No local HuggingFace-compatible models loaded. Keyword fallback is active.";
   }
 }
-
-type ClassifiedRuntimeStatus = "loaded" | "not_loaded" | "unsupported" | "error" | "fallback";
 
 export const localModelRegistry = new LocalModelRegistry();

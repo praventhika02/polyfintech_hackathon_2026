@@ -7,7 +7,8 @@
     "build": "next build",
     "lint": "next lint",
     "test:intelligence": "node scripts/intelligence-audit-tests.mjs",
-    "test:intelligence:ml": "node scripts/intelligence-ml-runtime-tests.mjs"
+    "test:intelligence:ml": "node scripts/intelligence-ml-runtime-tests.mjs",
+    "test:market-scan": "node scripts/market-scan-tests.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
