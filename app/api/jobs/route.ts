@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
+import { fetchJobSignal, resolveCompany } from "@/lib/esg/connectors";
 
-export async function GET() {
-  const configured = Boolean(process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_KEY);
-  return NextResponse.json({
-    available: configured,
-    source: configured ? "Adzuna" : "Adzuna API keys required",
-    message: configured
-      ? "Job signal connector is configured."
-      : "Add ADZUNA_APP_ID and ADZUNA_APP_KEY to enable live sustainability hiring signals."
-  });
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const company = await resolveCompany(url.searchParams.get("q") || "DBS");
+  const signal = await fetchJobSignal(company);
+  return NextResponse.json({ company, signal });
 }

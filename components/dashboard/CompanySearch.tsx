@@ -1,29 +1,19 @@
-"use client";
+import { Search, Sparkles } from "lucide-react";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Search } from "lucide-react";
-
-export function CompanySearch() {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
-
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const value = query.trim();
-    if (value) router.push(`/company/${encodeURIComponent(value)}`);
-  }
-
+export function CompanySearch({ compact = false, defaultValue = "" }: { compact?: boolean; defaultValue?: string }) {
   return (
-    <form className="search-box" onSubmit={onSubmit}>
-      <Search size={19} />
+    <form className={`search-box ${compact ? "compact-search" : ""}`} action="/dashboard" method="get">
+      <Search size={19} aria-hidden />
       <input
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        name="q"
+        defaultValue={defaultValue}
         placeholder="Search ticker or company, e.g. DBS, TSLA, Microsoft"
         aria-label="Search company"
       />
-      <button className="primary-btn" style={{ width: "auto", minWidth: 118 }} type="submit">Analyze</button>
+      <button className="primary-btn" type="submit">
+        <Sparkles size={17} />
+        Analyze
+      </button>
     </form>
   );
 }

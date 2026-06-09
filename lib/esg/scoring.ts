@@ -1,24 +1,43 @@
-import type { CompanySeed, ESGAnalysis, MarketSnapshot, NewsArticle, SignalBreakdown } from "@/lib/esg/types";
+import { scoringWeights } from "@/lib/esg/config";
+import type { CompanyProfile, ESGAnalysis, ESGCategory, JobSignal, MarketSnapshot, NewsArticle, PatentSignal } from "@/lib/esg/types";
 
 const positiveWords = [
-  "green", "renewable", "sustainable", "transition", "carbon reduction", "climate", "clean",
-  "impact", "governance", "inclusive", "electric", "recycling", "decarbon", "net zero",
-  "solar", "battery", "safety", "ethics", "transparency", "diversity"
+  "renewable",
+  "sustainable",
+  "transition",
+  "carbon reduction",
+  "clean energy",
+  "decarbon",
+  "net zero",
+  "solar",
+  "battery",
+  "recycling",
+  "safety",
+  "ethics",
+  "transparency",
+  "diversity",
+  "green bond",
+  "climate target"
 ];
 
 const negativeWords = [
-  "lawsuit", "probe", "pollution", "coal", "fraud", "strike", "controversy", "fine",
-  "emission breach", "deforestation", "bribery", "corruption", "spill", "forced labor",
-  "greenwashing", "recall", "regulator", "violation"
+  "lawsuit",
+  "probe",
+  "pollution",
+  "fraud",
+  "strike",
+  "controversy",
+  "fine",
+  "emission breach",
+  "deforestation",
+  "bribery",
+  "corruption",
+  "spill",
+  "forced labor",
+  "greenwashing",
+  "regulator",
+  "violation"
 ];
-
-export const scoringWeights = {
-  newsEsgSentiment: 0.35,
-  greenHiringSignal: 0.2,
-  patentInnovationSignal: 0.2,
-  governanceSignal: 0.15,
-  trendConsistency: 0.1
-};
 
 export function clamp(value: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, value));
@@ -28,33 +47,55 @@ export function scoreTone(text: string) {
   const lower = text.toLowerCase();
   let score = 0;
   positiveWords.forEach((word) => {
-    if (lower.includes(word)) score += 1;
+    if (lower.includes(word)) score += 1.2;
   });
   negativeWords.forEach((word) => {
-    if (lower.includes(word)) score -= 1.35;
+    if (lower.includes(word)) score -= 1.6;
   });
   return score;
 }
 
-export function classifyCategory(text: string): NewsArticle["category"] {
+export function sentimentFromTone(tone: number): NewsArticle["sentiment"] {
+  if (tone > 0.8) return "positive";
+  if (tone < -0.8) return "negative";
+  return "neutral";
+}
+
+export function classifyCategory(text: string): ESGCategory {
   const lower = text.toLowerCase();
-  if (/board|governance|audit|compliance|shareholder|fraud|bribery|corruption|regulator|disclosure/.test(lower)) return "G";
-  if (/labor|labour|worker|safety|diversity|community|human rights|privacy|inclusive|training/.test(lower)) return "S";
+  if (/board|governance|audit|compliance|shareholder|fraud|bribery|corruption|regulator|disclosure|ethics/.test(lower)) return "G";
+  if (/labor|labour|worker|safety|diversity|community|human rights|privacy|inclusive|training|union/.test(lower)) return "S";
   return "E";
 }
 
-export function riskType(text: string) {
+export function riskType(text: string): NewsArticle["riskType"] | null {
   const lower = text.toLowerCase();
-  if (/fraud|bribery|corruption|audit|regulator|lawsuit|probe/.test(lower)) return "Governance";
-  if (/pollution|emission|spill|deforestation|coal|climate/.test(lower)) return "Environmental";
-  if (/strike|worker|safety|privacy|human rights|forced labor|labour/.test(lower)) return "Social";
+  if (/fraud|bribery|corruption|audit|regulator|lawsuit|probe|governance/.test(lower)) return "Governance";
+  if (/pollution|emission|spill|deforestation|coal|climate|greenwashing/.test(lower)) return "Environmental";
+  if (/strike|worker|safety|privacy|human rights|forced labor|labour|labor/.test(lower)) return "Social";
   return null;
 }
 
-function keywordSignal(news: NewsArticle[], pattern: RegExp, base: number, weight: number) {
-  const matches = news.filter((article) => pattern.test(article.title)).length;
+function scoreNews(news: NewsArticle[]) {
+  if (!news.length) return 42;
+  const averageTone = news.reduce((sum, article) => sum + article.tone, 0) / news.length;
+  const positives = news.filter((article) => article.sentiment === "positive").length;
+  const risks = news.filter((article) => article.riskType).length;
+  return Math.round(clamp(55 + averageTone * 9 + positives * 2.2 - risks * 4.5 + Math.min(news.length, 12)));
+}
+
+function scoreGovernance(news: NewsArticle[]) {
+  const governance = news.filter((article) => article.category === "G");
+  const riskPenalty = governance.filter((article) => article.riskType === "Governance").length * 9;
+  const positive = governance.filter((article) => article.sentiment === "positive").length * 6;
+  return Math.round(clamp(58 + positive - riskPenalty, 22, 96));
+}
+
+function scoreTrend(news: NewsArticle[], market: MarketSnapshot | null) {
   const tone = news.reduce((sum, article) => sum + article.tone, 0);
-  return Math.round(clamp(base + matches * weight + news.length * 1.15 + tone * 2.6, 22, 96));
+  const marketPulse = market ? clamp(market.change3m / 1.8, -12, 12) : 0;
+  const riskDrag = news.filter((article) => article.riskType).length * 2.5;
+  return Math.round(clamp(56 + tone * 4 + marketPulse - riskDrag, 18, 96));
 }
 
 function buildForecast(currentScore: number, momentumScore: number) {
@@ -62,61 +103,70 @@ function buildForecast(currentScore: number, momentumScore: number) {
     const month = new Date();
     month.setMonth(month.getMonth() + index + 1);
     const drift = (momentumScore / 12) * (index + 1);
-    const seasonality = Math.sin(index / 1.7) * 1.4;
+    const confidenceCurve = Math.sin(index / 2) * 1.2;
     return {
       month: month.toLocaleString("en", { month: "short" }),
-      score: Math.round(clamp(currentScore + drift + seasonality, 0, 100))
+      score: Math.round(clamp(currentScore + drift + confidenceCurve))
     };
   });
 }
 
 function classify(currentScore: number, momentumScore: number): ESGAnalysis["classification"] {
-  if (currentScore < 68 && momentumScore >= 8) return "Hidden Winner";
+  if (currentScore < 68 && momentumScore >= 0) return "Hidden Winner";
   if (currentScore >= 68 && momentumScore >= 0) return "Future Leader";
   if (currentScore < 68 && momentumScore < 0) return "Value Trap";
-  return "Overrated Leader";
+  if (currentScore >= 68 && momentumScore < 0) return "Overrated Leader";
+  return "Value Trap";
 }
 
 function investorSignal(currentScore: number, momentumScore: number, confidenceScore: number): ESGAnalysis["investorSignal"] {
-  if (momentumScore >= 14 && confidenceScore >= 70) return "Buy";
+  if (momentumScore >= 14 && confidenceScore >= 66) return "Buy";
   if (momentumScore >= 5) return "Watch";
   if (currentScore >= 70 && momentumScore > -8) return "Hold";
   return "Avoid";
 }
 
-export function buildAnalysis(company: CompanySeed, news: NewsArticle[], market: MarketSnapshot | null): ESGAnalysis {
-  const newsSignal = keywordSignal(news, /sustainability|esg|green|climate|renewable|governance|carbon|transition|net zero/i, 48, 4.4);
-  const hiring = keywordSignal(news, /hiring|jobs|talent|specialist|department|workforce|training|chief sustainability/i, 42, 11);
-  const patent = keywordSignal(news, /patent|innovation|technology|clean|renewable|ai|electric|battery|recycling|transition/i, 42, 9);
-  const emissions = keywordSignal(news, /emission|carbon|climate|renewable|solar|green|energy|decarbon|net zero/i, 46, 9);
-  const governance = keywordSignal(news, /governance|board|risk|compliance|audit|shareholder|investor|vote|ethics/i, 49, 9);
-  const tone = news.reduce((sum, article) => sum + article.tone, 0);
-  const marketPulse = clamp((market?.change3m || 0) / 2, -9, 9);
-  const dataVolume = clamp(news.length * 2.5, 0, 24);
-  const stability = 7 - Math.min(6, Math.abs(company.beta - 1) * 4.4);
-  const trendConsistency = Math.round(clamp(56 + tone * 5 + marketPulse + stability, 20, 96));
-
-  const weighted =
-    scoringWeights.newsEsgSentiment * newsSignal +
-    scoringWeights.greenHiringSignal * hiring +
-    scoringWeights.patentInnovationSignal * patent +
-    scoringWeights.governanceSignal * governance +
-    scoringWeights.trendConsistency * trendConsistency;
-
-  const currentScore = Math.round(clamp(weighted + dataVolume * 0.42 + marketPulse * 0.7, 18, 98));
-  const riskPenalty = news.filter((article) => article.riskType).length * 3.5;
-  const momentumScore = Math.round(clamp((newsSignal - 58) * 0.35 + (hiring - 50) * 0.18 + (patent - 50) * 0.18 + marketPulse - riskPenalty, -35, 35));
-  const forecastScore = Math.round(clamp(currentScore + momentumScore * 0.72, 0, 100));
-  const confidenceScore = Math.round(clamp(52 + dataVolume + (market ? 9 : 0) + Math.min(12, Math.abs(tone) * 2), 35, 96));
-  const signals: SignalBreakdown = { news: newsSignal, hiring, patent, emissions, governance, trendConsistency };
-  const risks = news.filter((article) => article.riskType).slice(0, 4).map((article) => `${article.riskType}: ${article.title}`);
+export function buildAnalysis(
+  company: CompanyProfile,
+  news: NewsArticle[],
+  market: MarketSnapshot | null,
+  jobSignal: JobSignal,
+  patentSignal: PatentSignal
+): ESGAnalysis {
+  const newsScore = scoreNews(news);
+  const governance = scoreGovernance(news);
+  const trendConsistency = scoreTrend(news, market);
+  const currentScore = Math.round(
+    clamp(
+      scoringWeights.newsEsgSentiment * newsScore +
+        scoringWeights.greenJobHiringSignal * jobSignal.score +
+        scoringWeights.patentInnovationSignal * patentSignal.score +
+        scoringWeights.governanceSignal * governance +
+        scoringWeights.trendConsistency * trendConsistency
+    )
+  );
+  const riskCount = news.filter((article) => article.riskType).length;
+  const marketPulse = market ? clamp(market.change3m / 2, -10, 10) : 0;
+  const momentumScore = Math.round(
+    clamp((newsScore - 55) * 0.42 + (jobSignal.score - 50) * 0.16 + (patentSignal.score - 50) * 0.16 + marketPulse - riskCount * 3.2, -35, 35)
+  );
+  const forecastScore = Math.round(clamp(currentScore + momentumScore * 0.72));
+  const coveragePoints = [news.length > 0, jobSignal.available, patentSignal.available, Boolean(market)].filter(Boolean).length;
+  const confidenceScore = Math.round(clamp(46 + coveragePoints * 12 + Math.min(news.length, 12) * 1.6 - riskCount * 1.2, 28, 96));
+  const risks = news
+    .filter((article) => article.riskType)
+    .slice(0, 5)
+    .map((article) => `${article.riskType}: ${article.title}`);
 
   const explanation = [
-    `${news.length || "Limited"} ESG-relevant live articles were detected for ${company.name}.`,
-    `News sentiment contributes ${newsSignal}/100 to the momentum model.`,
-    `Green hiring proxy is ${hiring}/100 and innovation proxy is ${patent}/100 based on public signals.`,
-    market ? `Market trend contributes ${market.change3m}% over 3 months from ${market.source}.` : "Market data was unavailable, lowering confidence.",
-    risks.length ? "Risk evidence reduces the forward score until fresh positive signals offset it." : "No major live ESG controversy was detected in the fetched evidence."
+    news.length
+      ? `${news.length} GDELT ESG news items were classified for ${company.name}.`
+      : `Live ESG news coverage for ${company.name} was sparse, so confidence is intentionally lower.`,
+    `News sentiment contributes ${newsScore}/100 using keyword sentiment and ESG category classification.`,
+    `${jobSignal.reason} Hiring contributes ${Math.round(jobSignal.score)}/100.`,
+    `${patentSignal.reason} Innovation contributes ${Math.round(patentSignal.score)}/100.`,
+    market ? `Yahoo Finance shows ${market.change3m}% three-month price movement, used only as a trend consistency proxy.` : "Market trend data was unavailable, lowering confidence.",
+    risks.length ? "Risk evidence is penalizing the forward momentum score." : "No severe ESG controversy appeared in the fetched evidence window."
   ];
 
   return {
@@ -127,18 +177,26 @@ export function buildAnalysis(company: CompanySeed, news: NewsArticle[], market:
     confidenceScore,
     investorSignal: investorSignal(currentScore, momentumScore, confidenceScore),
     classification: classify(currentScore, momentumScore),
-    signals,
+    signals: {
+      news: newsScore,
+      hiring: Math.round(jobSignal.score),
+      patents: Math.round(patentSignal.score),
+      governance,
+      trendConsistency
+    },
+    coverage: {
+      news: news.length > 0,
+      jobs: jobSignal.available,
+      patents: patentSignal.available,
+      market: Boolean(market),
+      satellite: false
+    },
     explanation,
     risks,
     news,
+    jobSignal,
+    patentSignal,
     market,
-    coverage: {
-      news: news.length > 0,
-      market: Boolean(market),
-      jobs: false,
-      patents: false,
-      satellite: false
-    },
     forecast: buildForecast(currentScore, momentumScore),
     updatedAt: new Date().toISOString()
   };

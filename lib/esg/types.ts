@@ -1,28 +1,47 @@
-export type CompanySeed = {
-  id: string;
+export type ESGCategory = "E" | "S" | "G";
+export type InvestorSignal = "Buy" | "Watch" | "Hold" | "Avoid";
+export type MomentumClass = "Hidden Winner" | "Future Leader" | "Value Trap" | "Overrated Leader";
+
+export type CompanyProfile = {
   name: string;
   ticker: string;
-  region: string;
-  sector: string;
-  country: string;
-  beta: number;
+  exchange?: string;
+  country?: string;
+  sector?: string;
+  marketCap?: number;
+  beta?: number;
 };
 
 export type NewsArticle = {
   title: string;
   url: string;
   source: string;
-  domain?: string;
-  seenDate?: string;
+  publishedAt?: string;
   tone: number;
-  category: "E" | "S" | "G";
-  riskType: string | null;
+  category: ESGCategory;
+  sentiment: "positive" | "neutral" | "negative";
+  riskType?: "Environmental" | "Social" | "Governance";
+};
+
+export type JobSignal = {
+  available: boolean;
+  score: number;
+  count: number;
+  source: string;
+  reason: string;
+};
+
+export type PatentSignal = {
+  available: boolean;
+  score: number;
+  count: number;
+  source: string;
+  reason: string;
 };
 
 export type MarketSnapshot = {
-  ticker: string;
-  price: number;
-  currency: string;
+  price?: number;
+  currency?: string;
   change3m: number;
   source: string;
 };
@@ -30,31 +49,37 @@ export type MarketSnapshot = {
 export type SignalBreakdown = {
   news: number;
   hiring: number;
-  patent: number;
-  emissions: number;
+  patents: number;
   governance: number;
   trendConsistency: number;
 };
 
-export type ESGAnalysis = CompanySeed & {
+export type ForecastPoint = {
+  month: string;
+  score: number;
+};
+
+export type ESGAnalysis = CompanyProfile & {
   currentScore: number;
   forecastScore: number;
   momentumScore: number;
   confidenceScore: number;
-  investorSignal: "Buy" | "Watch" | "Hold" | "Avoid";
-  classification: "Hidden Winner" | "Future Leader" | "Value Trap" | "Overrated Leader";
+  investorSignal: InvestorSignal;
+  classification: MomentumClass;
   signals: SignalBreakdown;
+  coverage: {
+    news: boolean;
+    jobs: boolean;
+    patents: boolean;
+    market: boolean;
+    satellite: boolean;
+  };
   explanation: string[];
   risks: string[];
   news: NewsArticle[];
+  jobSignal: JobSignal;
+  patentSignal: PatentSignal;
   market: MarketSnapshot | null;
-  coverage: {
-    news: boolean;
-    market: boolean;
-    jobs: boolean;
-    patents: boolean;
-    satellite: boolean;
-  };
-  forecast: Array<{ month: string; score: number }>;
+  forecast: ForecastPoint[];
   updatedAt: string;
 };

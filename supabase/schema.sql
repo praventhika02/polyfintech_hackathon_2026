@@ -1,85 +1,80 @@
 create extension if not exists "pgcrypto";
 
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text not null,
-  name text,
+create table if not exists public.companies (
+  id uuid primary key default gen_random_uuid(),
+  ticker text not null unique,
+  name text not null,
+  exchange text,
+  country text,
+  sector text,
+  market_cap numeric,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.esg_analyses (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid references public.companies(id) on delete cascade,
+  ticker text not null,
+  current_score numeric not null,
+  forecast_score numeric not null,
+  momentum_score numeric not null,
+  confidence_score numeric not null,
+  investor_signal text not null check (investor_signal in ('Buy', 'Watch', 'Hold', 'Avoid')),
+  classification text not null check (classification in ('Hidden Winner', 'Future Leader', 'Value Trap', 'Overrated Leader')),
+  signal_breakdown jsonb not null default '{}'::jsonb,
+  explanation jsonb not null default '[]'::jsonb,
+  risks jsonb not null default '[]'::jsonb,
+  coverage jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.watchlists (
+create table if not exists public.news_articles (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  analysis_id uuid references public.esg_analyses(id) on delete cascade,
   ticker text not null,
-  company_name text not null,
-  created_at timestamptz not null default now(),
-  unique (user_id, ticker)
-);
-
-create table if not exists public.alert_subscriptions (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  alert_type text not null check (alert_type in ('momentum', 'hidden_winners', 'risk')),
-  created_at timestamptz not null default now(),
-  unique (user_id, alert_type)
-);
-
-create table if not exists public.analysis_history (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  ticker text not null,
-  company_name text not null,
-  current_score numeric,
-  forecast_score numeric,
-  momentum_score numeric,
-  confidence_score numeric,
-  payload jsonb not null default '{}'::jsonb,
+  title text not null,
+  url text,
+  source text,
+  category text check (category in ('E', 'S', 'G')),
+  sentiment text check (sentiment in ('positive', 'neutral', 'negative')),
+  risk_type text,
+  published_at text,
   created_at timestamptz not null default now()
 );
 
-alter table public.profiles enable row level security;
-alter table public.watchlists enable row level security;
-alter table public.alert_subscriptions enable row level security;
-alter table public.analysis_history enable row level security;
+create table if not exists public.job_signals (
+  id uuid primary key default gen_random_uuid(),
+  analysis_id uuid references public.esg_analyses(id) on delete cascade,
+  ticker text not null,
+  available boolean not null default false,
+  score numeric not null,
+  count integer not null default 0,
+  source text not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
 
-create policy "Users can read own profile"
-  on public.profiles for select
-  using (auth.uid() = id);
+create table if not exists public.patent_signals (
+  id uuid primary key default gen_random_uuid(),
+  analysis_id uuid references public.esg_analyses(id) on delete cascade,
+  ticker text not null,
+  available boolean not null default false,
+  score numeric not null,
+  count integer not null default 0,
+  source text not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
 
-create policy "Users can update own profile"
-  on public.profiles for update
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
+create table if not exists public.forecasts (
+  id uuid primary key default gen_random_uuid(),
+  analysis_id uuid references public.esg_analyses(id) on delete cascade,
+  ticker text not null,
+  month text not null,
+  score numeric not null,
+  created_at timestamptz not null default now()
+);
 
-create policy "Users can manage own watchlist"
-  on public.watchlists for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create policy "Users can manage own alert subscriptions"
-  on public.alert_subscriptions for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create policy "Users can manage own analysis history"
-  on public.analysis_history for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-begin
-  insert into public.profiles (id, email, name)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'name', new.raw_user_meta_data->>'full_name'))
-  on conflict (id) do update set email = excluded.email;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+create index if not exists esg_analyses_ticker_created_at_idx on public.esg_analyses (ticker, created_at desc);
+create index if not exists news_articles_ticker_created_at_idx on public.news_articles (ticker, created_at desc);

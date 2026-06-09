@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
+import { fetchPatentSignal, resolveCompany } from "@/lib/esg/connectors";
 
-export async function GET() {
-  const configured = Boolean(process.env.PATENTSVIEW_API_KEY);
-  return NextResponse.json({
-    available: configured,
-    source: configured ? "PatentsView" : "PatentsView API key optional",
-    message: configured
-      ? "Patent signal connector is configured."
-      : "Patent innovation is estimated from public news until PATENTSVIEW_API_KEY is added."
-  });
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const company = await resolveCompany(url.searchParams.get("q") || "DBS");
+  const signal = await fetchPatentSignal(company);
+  return NextResponse.json({ company, signal });
 }
