@@ -106,3 +106,143 @@ TypeError: fetch failed
  GET /api/company/analyze?q=DBS 200 in 27ms
  GET /api/company/analyze?q=TSLA 200 in 27ms
  GET /api/company/analyze?q=MSFT 200 in 26ms
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND query1.finance.yahoo.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'query1.finance.yahoo.com'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND query1.finance.yahoo.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'query1.finance.yahoo.com'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND api.gdeltproject.org
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'api.gdeltproject.org'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND query1.finance.yahoo.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'query1.finance.yahoo.com'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND query1.finance.yahoo.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'query1.finance.yahoo.com'
+  }
+}
+ GET /api/company/analyze?q=DBS 200 in 97ms
+ GET /api/company/analyze?q=TSLA 200 in 94ms
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND query1.finance.yahoo.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'query1.finance.yahoo.com'
+  }
+}
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:13510:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  [cause]: Error: getaddrinfo ENOTFOUND query1.finance.yahoo.com
+      at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)
+      at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+    errno: -3008,
+    code: 'ENOTFOUND',
+    syscall: 'getaddrinfo',
+    hostname: 'query1.finance.yahoo.com'
+  }
+}
+ GET /api/company/analyze?q=MSFT 200 in 135ms
+ GET /api/company/analyze?q=DBS 200 in 76ms
+ GET /api/company/analyze?q=TSLA 200 in 74ms
+ GET /api/company/analyze?q=MSFT 200 in 56ms
+ GET /investigate?q= 200 in 194ms
+ GET /investigate?q=DBS 307 in 126ms
+ GET /investigate/DBS 200 in 599ms
+ ✓ Compiled in 3s (2387 modules)
+ ✓ Compiled in 877ms (2373 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 960ms (434 modules)
+ GET /investigate/DBS 404 in 98ms
+Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+ ⨯ unhandledRejection: Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+ ⨯ unhandledRejection: Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
