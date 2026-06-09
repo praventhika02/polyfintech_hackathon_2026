@@ -1,16 +1,9 @@
-import type { ForecastScenario, MomentumScore } from "@/types";
+import type { ForecastScenario, MomentumScore, IntelligenceUnavailable } from "@/types";
+import { insufficientEvidence } from "@/utils/evidence";
 
 export class ForecastingService {
-  buildBaseline(momentum: MomentumScore): ForecastScenario {
-    return {
-      id: `forecast_${momentum.companyId}_baseline`,
-      companyId: momentum.companyId,
-      label: "Baseline",
-      assumptions: ["No scenario assumptions configured in foundation layer."],
-      horizonMonths: 12,
-      points: [],
-      generatedAt: new Date().toISOString()
-    };
+  buildBaseline(_momentum: MomentumScore | null, evidenceCount: number): ForecastScenario | IntelligenceUnavailable {
+    return insufficientEvidence(evidenceCount);
   }
 }
 

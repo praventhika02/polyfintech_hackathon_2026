@@ -246,3 +246,74 @@ Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyf
   syscall: 'scandir',
   path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
 }
+Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+ ⨯ unhandledRejection: Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+ ⨯ unhandledRejection: Error: ENOENT: no such file or directory, scandir 'C:\Users\prave\OneDrive\polyfintech_hackathon_2026\app'
+    at async Object.readdir (node:internal/fs/promises:949:18)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:39:29
+    at async Promise.all (index 0)
+    at async recursiveReadDir (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\lib\recursive-readdir.js:32:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:71:25
+    at async Promise.all (index 0)
+    at async BatchedFileReader.load (C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:67:25)
+    at async C:\Users\prave\OneDrive\polyfintech_hackathon_2026\node_modules\next\dist\server\future\route-matcher-providers\dev\helpers\file-reader\batched-file-reader.js:41:26 {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'scandir',
+  path: 'C:\\Users\\prave\\OneDrive\\polyfintech_hackathon_2026\\app'
+}
+ ✓ Compiled in 1906ms (216 modules)

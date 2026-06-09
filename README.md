@@ -1,8 +1,8 @@
 # ESG Pulse 360
 
-Foundation architecture for a future ESG intelligence platform.
+Evidence-first architecture for a future ESG intelligence platform.
 
-This repository has been reset from a dashboard prototype into an experience-centric Next.js codebase. The current scope is architecture only: route groups, domain types, state stores, API boundaries, service/provider contracts, database model placeholders, feature flags, design tokens, and motion variants.
+This repository has been reset from an old dashboard into an experience-centric Next.js codebase. The current scope is the intelligence data platform: route groups, domain types, state stores, typed API boundaries, provider contracts, evidence storage models, feature flags, design tokens, and motion variants.
 
 ## Architecture
 
@@ -11,11 +11,11 @@ This repository has been reset from a dashboard prototype into an experience-cen
 - `src/services`: service/provider boundaries for external integrations and intelligence services.
 - `src/types`: shared TypeScript contracts.
 - `src/stores`: Zustand stores split by market, company, portfolio, UI, and copilot state.
-- `src/database`: persistence model placeholders.
+- `src/database`: persistence model contracts.
 - `src/styles`: global base styles and design tokens.
 - `src/animations`: Framer Motion variant presets.
 
-See `docs/architecture-audit.md` for the full audit and implementation inventory.
+See `docs/intelligence-data-platform.md` for the current data platform audit and implementation inventory.
 
 ## Scripts
 
@@ -26,4 +26,8 @@ npm run build
 
 ## Current Scope
 
-The app intentionally does not implement market scans, maps, dashboards, copilot intelligence, portfolio analytics, or investigation screens yet. Those features should be built on top of the new foundation.
+The app intentionally does not infer ESG scores, momentum, forecasts, rankings, or investment signals without collected evidence.
+
+
+
+

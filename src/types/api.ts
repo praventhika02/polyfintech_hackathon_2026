@@ -3,6 +3,7 @@ export type ApiResponse<T> = {
   meta: {
     requestId: string;
     generatedAt: string;
+    documentation?: string;
   };
 };
 

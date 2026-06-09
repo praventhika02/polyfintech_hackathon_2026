@@ -1,11 +1,9 @@
 import type {
   Company,
-  CopilotConversation,
   EvidenceItem,
-  ForecastScenario,
   MarketSignal,
-  PortfolioAnalysis,
-  RiskAlert
+  EvidenceSourceStatus,
+  MarketTrend
 } from "@/types";
 
 export type CompanyRecord = Company & {
@@ -13,17 +11,21 @@ export type CompanyRecord = Company & {
   updatedAt: string;
 };
 
-export type MarketSignalRecord = MarketSignal;
-
 export type EvidenceRecord = EvidenceItem & {
   companyId?: string;
 };
 
-export type RiskAlertRecord = RiskAlert;
+export type NewsEvidenceRecord = EvidenceRecord & { source: "news" };
 
-export type ForecastRecord = ForecastScenario;
+export type JobEvidenceRecord = EvidenceRecord & { source: "jobs" };
 
-export type PortfolioAnalysisRecord = PortfolioAnalysis;
+export type PatentEvidenceRecord = EvidenceRecord & { source: "patents" };
+
+export type FilingEvidenceRecord = EvidenceRecord & { source: "filings" };
+
+export type GovernanceEvidenceRecord = EvidenceRecord & { source: "governance" };
+
+export type MarketSignalRecord = MarketTrend | MarketSignal;
 
 export type ScanHistoryRecord = {
   id: string;
@@ -34,6 +36,4 @@ export type ScanHistoryRecord = {
   inputHash: string;
 };
 
-export type CopilotConversationRecord = CopilotConversation & {
-  userId?: string;
-};
+export type ProviderHealthRecord = EvidenceSourceStatus;

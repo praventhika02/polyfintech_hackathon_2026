@@ -1,1 +1,1 @@
-Static platform assets belong here when they are imported by the application.
+Imported platform assets belong here when they are used by the application.

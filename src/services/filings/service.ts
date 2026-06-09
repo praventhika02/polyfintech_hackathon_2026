@@ -1,11 +1,31 @@
-import type { Company, EvidenceItem } from "@/types";
-import { emptyFilingsProvider, type FilingsProvider } from "./provider";
+import { cacheTtlSeconds } from "@/config/cache";
+import type { CompanyProfile, EvidenceItem, EvidenceSourceStatus } from "@/types";
+import { sourceStatus } from "@/utils/evidence";
 
 export class FilingsService {
-  constructor(private readonly provider: FilingsProvider = emptyFilingsProvider) {}
+  async getFilingEvidence(company: CompanyProfile): Promise<{ items: EvidenceItem[]; statuses: EvidenceSourceStatus[] }> {
+    const provider =
+      company.exchange?.toUpperCase().includes("SGX") || company.ticker.endsWith(".SI")
+        ? "SGX"
+        : company.exchange?.toUpperCase().includes("BURSA") || company.ticker.endsWith(".KL")
+          ? "Bursa Malaysia"
+          : company.exchange?.toUpperCase().includes("SET") || company.ticker.endsWith(".BK")
+            ? "SET Thailand"
+            : "System";
 
-  getFilings(company: Company): Promise<EvidenceItem[]> {
-    return this.provider.getFilings(company);
+    return {
+      items: [],
+      statuses: [
+        sourceStatus(
+          "filings",
+          provider,
+          "unavailable",
+          0,
+          "Public filing feed integration is not configured for this provider. No filing evidence was fabricated.",
+          cacheTtlSeconds.filings
+        )
+      ]
+    };
   }
 }
 

@@ -11,4 +11,4 @@ ESG Pulse 360 is now organized as an intelligence platform foundation rather tha
 
 ## Implementation Rule
 
-Feature work should add behavior inside `src/features` and `src/services`, then expose it through typed API routes and hooks. Components should render typed data and dispatch store actions only.
+Feature work should add behavior inside `src/features` and `src/services`, then expose it through typed API routes and hooks. Components should render typed data and dispatch store actions only. Intelligence outputs must be traceable to collected evidence.

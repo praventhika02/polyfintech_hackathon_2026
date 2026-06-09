@@ -9,3 +9,12 @@ export type MomentumScore = {
   classification: MomentumClass;
   calculatedAt: string;
 };
+
+export type IntelligenceUnavailable = {
+  status: "insufficient_evidence";
+  message: "Insufficient evidence available.";
+  evidenceCount: number;
+  checkedAt: string;
+};
+
+export type MomentumResult = MomentumScore | IntelligenceUnavailable;

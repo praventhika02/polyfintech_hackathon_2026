@@ -1,10 +1,12 @@
 export const databaseTables = {
   companies: "companies",
-  marketSignals: "market_signals",
   evidence: "evidence",
-  riskAlerts: "risk_alerts",
-  forecasts: "forecasts",
-  portfolioAnalyses: "portfolio_analyses",
+  newsEvidence: "news_evidence",
+  jobEvidence: "job_evidence",
+  patentEvidence: "patent_evidence",
+  filingEvidence: "filing_evidence",
+  governanceEvidence: "governance_evidence",
+  marketSignals: "market_signals",
   scanHistory: "scan_history",
-  copilotConversations: "copilot_conversations"
+  providerHealth: "provider_health"
 } as const;

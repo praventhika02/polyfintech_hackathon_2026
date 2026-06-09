@@ -1,17 +1,9 @@
-import type { EvidenceItem, MomentumScore } from "@/types";
+import type { EvidenceItem, MomentumResult } from "@/types";
+import { insufficientEvidence } from "@/utils/evidence";
 
 export class ScoringService {
-  calculateMomentum(companyId: string, evidence: EvidenceItem[]): MomentumScore {
-    const confidence = evidence.length ? Math.min(95, 45 + evidence.length * 5) : 35;
-    return {
-      companyId,
-      currentScore: 0,
-      forecastScore: 0,
-      momentum: 0,
-      confidence,
-      classification: "value_trap",
-      calculatedAt: new Date().toISOString()
-    };
+  calculateMomentum(_companyId: string, evidence: EvidenceItem[]): MomentumResult {
+    return insufficientEvidence(evidence.length);
   }
 }
 

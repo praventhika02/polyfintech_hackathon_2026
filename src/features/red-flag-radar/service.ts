@@ -3,6 +3,7 @@ import type { RedFlagRadarResult } from "./domain";
 export async function scanRedFlags(): Promise<RedFlagRadarResult> {
   return {
     alerts: [],
-    generatedAt: new Date().toISOString()
+    generatedAt: new Date().toISOString(),
+    message: "Insufficient evidence available."
   };
 }

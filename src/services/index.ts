@@ -1,3 +1,5 @@
+export { companyDiscoveryService, CompanyDiscoveryService } from "./company/service";
+export { evidenceCollectionService, EvidenceCollectionService } from "./evidence/collection-service";
 export { filingsService, FilingsService } from "./filings/service";
 export { financeService, FinanceService } from "./finance/service";
 export { forecastingService, ForecastingService } from "./forecasting/service";
@@ -6,3 +8,4 @@ export { jobsService, JobsService } from "./jobs/service";
 export { newsService, NewsService } from "./news/service";
 export { patentsService, PatentsService } from "./patents/service";
 export { scoringService, ScoringService } from "./scoring/service";
+export { evidenceRepository, RuntimeEvidenceRepository } from "./storage/evidence-repository";

@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
+import { companyDiscoveryService } from "@/services/company/service";
 import { createApiResponse } from "@/utils/api-response";
-import type { Company } from "@/types";
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
   const query = new URL(request.url).searchParams.get("q") || "";
-  const companies: Company[] = query
-    ? [
-        {
-          id: `company_${query.toLowerCase()}`,
-          name: query,
-          ticker: query.toUpperCase()
-        }
-      ]
-    : [];
-
-  return NextResponse.json(createApiResponse({ companies }));
+  const limit = Number(new URL(request.url).searchParams.get("limit") || 10);
+  const result = await companyDiscoveryService.search(query, limit);
+  return NextResponse.json(createApiResponse(result, "GET /api/company/search?q=DBS&limit=10"));
 }

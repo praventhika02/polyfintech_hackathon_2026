@@ -36,5 +36,28 @@ export type MarketScan = {
 export type SectorScanRequest = {
   region?: string;
   sectors?: string[];
+  query?: string;
+  exchange?: string;
   limit?: number;
+};
+
+export type MarketTrend = {
+  ticker: string;
+  provider: "Yahoo Finance";
+  performance3m?: number;
+  performance6m?: number;
+  performance12m?: number;
+  volatility?: number;
+  sector?: string;
+  industry?: string;
+  trendDirection: "up" | "down" | "flat" | "unavailable";
+  capturedAt: string;
+};
+
+export type DynamicUniverse = {
+  id: string;
+  query: SectorScanRequest;
+  companies: import("./company").CompanyProfile[];
+  statuses: import("./evidence").EvidenceSourceStatus[];
+  generatedAt: string;
 };
