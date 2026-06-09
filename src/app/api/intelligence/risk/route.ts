@@ -11,8 +11,9 @@ type RiskBody = {
 
 export async function POST(request: Request) {
   const body = await request.json() as RiskBody;
-  const classified = body.classifiedEvidence || await intelligenceService.classifyEvidence(body.evidence || []);
-  const alerts = intelligenceService.risks(body.evidence || [], classified);
+  const evidence = Array.isArray(body.evidence) ? body.evidence : [];
+  const classified = body.classifiedEvidence || await intelligenceService.classifyEvidence(evidence);
+  const alerts = intelligenceService.risks(evidence, classified);
   const status = alerts.some((alert) => alert.severity === "Critical")
     ? "Critical"
     : alerts.some((alert) => alert.severity === "High") || alerts.length >= 3

@@ -6,6 +6,13 @@ import { jobsService } from "@/services/jobs/service";
 import { newsService } from "@/services/news/service";
 import { patentsService } from "@/services/patents/service";
 import { evidenceRepository } from "@/services/storage/evidence-repository";
+import { cacheTtlSeconds } from "@/config/cache";
+import { sourceStatus } from "@/utils/evidence";
+
+type ProviderEvidenceResult = {
+  items: EvidenceCollection["items"];
+  statuses: EvidenceSourceStatus[];
+};
 
 function summarize(collectionItems: EvidenceCollection["items"]): EvidenceCollection["summary"] {
   return {
@@ -20,13 +27,21 @@ function summarize(collectionItems: EvidenceCollection["items"]): EvidenceCollec
 
 export class EvidenceCollectionService {
   async collectCompanyEvidence(company: CompanyProfile): Promise<EvidenceCollection> {
-    await evidenceRepository.saveCompany(company);
+    try {
+      await evidenceRepository.saveCompany(company);
+    } catch {
+      // Storage failures must not fabricate evidence or block live analysis.
+    }
+
     const [news, jobs, patents, filings, market] = await Promise.all([
-      newsService.getCompanyEvidence(company),
-      jobsService.getJobEvidence(company),
-      patentsService.getPatentEvidence(company),
-      filingsService.getFilingEvidence(company),
-      financeService.getMarketEvidence(company)
+      this.safeProvider("news", () => newsService.getCompanyEvidence(company)),
+      this.safeProvider("jobs", () => jobsService.getJobEvidence(company)),
+      this.safeProvider("patents", () => patentsService.getPatentEvidence(company)),
+      this.safeProvider("filings", () => filingsService.getFilingEvidence(company)),
+      this.safeProvider("finance", async () => {
+        const result = await financeService.getMarketEvidence(company);
+        return { items: result.items, statuses: result.statuses };
+      })
     ]);
     const governance = governanceService.extractGovernanceEvidence(company, [...news.items, ...filings.items]);
     const items = [...news.items, ...jobs.items, ...patents.items, ...filings.items, ...market.items, ...governance.items];
@@ -39,7 +54,11 @@ export class EvidenceCollectionService {
       statuses,
       summary: summarize(items)
     };
-    await evidenceRepository.saveCollection(collection);
+    try {
+      await evidenceRepository.saveCollection(collection);
+    } catch {
+      // Storage failures are represented by provider health elsewhere; do not crash intelligence.
+    }
     return collection;
   }
 
@@ -64,6 +83,26 @@ export class EvidenceCollectionService {
       metadataConfidence: 1
     });
     return collection.statuses;
+  }
+
+  private async safeProvider(source: EvidenceSourceStatus["source"], fetcher: () => Promise<ProviderEvidenceResult>): Promise<ProviderEvidenceResult> {
+    try {
+      return await fetcher();
+    } catch (error) {
+      return {
+        items: [],
+        statuses: [
+          sourceStatus(
+            source,
+            "System",
+            "error",
+            0,
+            error instanceof Error ? error.message : `${source} evidence provider failed.`,
+            cacheTtlSeconds.news
+          )
+        ]
+      };
+    }
   }
 }
 

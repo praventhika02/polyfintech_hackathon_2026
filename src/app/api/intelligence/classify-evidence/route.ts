@@ -9,6 +9,7 @@ type ClassifyBody = {
 
 export async function POST(request: Request) {
   const body = await request.json() as ClassifyBody;
-  const classified = await intelligenceService.classifyEvidence(body.evidence || []);
+  const evidence = Array.isArray(body.evidence) ? body.evidence : [];
+  const classified = await intelligenceService.classifyEvidence(evidence);
   return NextResponse.json(createApiResponse({ classified }, "POST /api/intelligence/classify-evidence"));
 }

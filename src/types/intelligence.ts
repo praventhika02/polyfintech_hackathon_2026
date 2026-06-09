@@ -16,14 +16,40 @@ export type ClassifiedEvidence = {
   evidenceId: string;
   category: EsgCategory;
   classificationConfidence: number;
+  classificationMethod: "local_huggingface" | "keyword_fallback";
   sentiment: {
     label: SentimentLabel;
     confidence: number;
+    method: "local_huggingface" | "keyword_fallback";
   };
   weightedSignal: number;
   sourceWeight: number;
   recencyWeight: number;
   modelNames: string[];
+};
+
+export type MlModelLoadStatus = "loaded" | "not_loaded";
+
+export type MlRuntimeHealth = {
+  status: "ok";
+  mlRuntime: {
+    enabled: boolean;
+    mode: "local_huggingface" | "keyword_fallback";
+    runtime: "xenova_transformers" | "unavailable";
+    fallbackActive: boolean;
+    dependencyInstalled: boolean;
+    modelCacheExists: boolean;
+    modelCachePath: string | null;
+    env: Record<string, string | boolean | null>;
+    loadError: string | null;
+    models: {
+      finbert_esg: MlModelLoadStatus;
+      finbert_sentiment: MlModelLoadStatus;
+      bart_mnli: MlModelLoadStatus;
+      bart_cnn: MlModelLoadStatus;
+      minilm: MlModelLoadStatus;
+    };
+  };
 };
 
 export type RiskAlert = {

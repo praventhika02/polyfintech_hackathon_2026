@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:intelligence": "node scripts/intelligence-audit-tests.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

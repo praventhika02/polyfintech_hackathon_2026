@@ -21,7 +21,8 @@ export type {
   EvidenceCluster,
   IntelligenceClassification,
   IntelligenceInput,
-  InvestorVerdict
+  InvestorVerdict,
+  MlRuntimeHealth
 } from "./intelligence";
 export type { DynamicUniverse, ESGSignal, MarketScan, MarketSignal, MarketTrend, SectorScanRequest } from "./market";
 export type { IntelligenceUnavailable, MomentumClass, MomentumResult, MomentumScore } from "./momentum";

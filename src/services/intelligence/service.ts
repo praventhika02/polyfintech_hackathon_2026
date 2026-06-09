@@ -90,24 +90,24 @@ function confidenceNumber(item: EvidenceItem): number {
   return 0.25;
 }
 
-function classifyItem(item: EvidenceItem): Pick<ClassifiedEvidence, "category" | "classificationConfidence"> {
+function classifyItemByKeywords(item: EvidenceItem): Pick<ClassifiedEvidence, "category" | "classificationConfidence"> {
   const lower = textOf(item).toLowerCase();
   const scores = Object.entries(CATEGORY_KEYWORDS).map(([category, keywords]) => ({
     category: category as Exclude<EsgCategory, "Non-ESG">,
     hits: keywords.filter((keyword) => lower.includes(keyword)).length
   }));
   const best = scores.sort((a, b) => b.hits - a.hits)[0];
-  if (!best || best.hits === 0) return { category: "Non-ESG", classificationConfidence: 0.2 };
-  return { category: best.category, classificationConfidence: Math.min(0.95, 0.55 + best.hits * 0.12 + confidenceNumber(item) * 0.2) };
+  if (!best || best.hits === 0) return { category: "Non-ESG", classificationConfidence: 0.15 };
+  return { category: best.category, classificationConfidence: Math.min(0.55, 0.28 + best.hits * 0.06 + confidenceNumber(item) * 0.08) };
 }
 
-function sentimentFor(item: EvidenceItem): ClassifiedEvidence["sentiment"] {
+function sentimentForKeywords(item: EvidenceItem): ClassifiedEvidence["sentiment"] {
   const lower = textOf(item).toLowerCase();
   const positives = POSITIVE_WORDS.filter((word) => lower.includes(word)).length;
   const negatives = NEGATIVE_WORDS.filter((word) => lower.includes(word)).length;
-  if (negatives > positives) return { label: "Negative", confidence: Math.min(0.95, 0.55 + negatives * 0.1) };
-  if (positives > negatives) return { label: "Positive", confidence: Math.min(0.95, 0.55 + positives * 0.08) };
-  return { label: "Neutral", confidence: 0.65 };
+  if (negatives > positives) return { label: "Negative", confidence: Math.min(0.58, 0.38 + negatives * 0.05), method: "keyword_fallback" };
+  if (positives > negatives) return { label: "Positive", confidence: Math.min(0.58, 0.38 + positives * 0.04), method: "keyword_fallback" };
+  return { label: "Neutral", confidence: 0.45, method: "keyword_fallback" };
 }
 
 function clusterEvidence(items: EvidenceItem[]): EvidenceCluster[] {
@@ -255,23 +255,33 @@ function buildAvailability(company: CompanyProfile, collection: EvidenceCollecti
 export class IntelligenceService {
   async classifyEvidence(items: EvidenceItem[]): Promise<ClassifiedEvidence[]> {
     if (!items.length) return [];
-    await localModelRegistry.loadOnce();
-    return items.map((item) => {
-      const classification = classifyItem(item);
-      const sentiment = sentimentFor(item);
+    return Promise.all(items.map(async (item) => {
+      const text = textOf(item);
+      const modelClassification = await localModelRegistry.classifyEsg(text);
+      const fallbackClassification = classifyItemByKeywords(item);
+      const classification = modelClassification
+        ? { category: modelClassification.category, classificationConfidence: modelClassification.confidence }
+        : fallbackClassification;
+      const modelSentiment = await localModelRegistry.classifySentiment(text);
+      const fallbackSentiment = sentimentForKeywords(item);
+      const sentiment = modelSentiment
+        ? { ...modelSentiment, method: "local_huggingface" as const }
+        : fallbackSentiment;
+      const classificationMethod = modelClassification ? "local_huggingface" as const : "keyword_fallback" as const;
       const sourceWeight = SOURCE_WEIGHTS[item.source] || 1;
       const recent = recencyWeight(item);
       const weightedSignal = sentimentValue(sentiment.label) * sentiment.confidence * classification.classificationConfidence * sourceWeight * recent;
       return {
         evidenceId: item.id,
         ...classification,
+        classificationMethod,
         sentiment,
         weightedSignal: Number(weightedSignal.toFixed(4)),
         sourceWeight,
         recencyWeight: recent,
         modelNames: localModelRegistry.names()
       };
-    });
+    }));
   }
 
   async analyse(input: IntelligenceInput): Promise<ESGIntelligenceResult> {
@@ -356,7 +366,7 @@ export class IntelligenceService {
     return detectRisks(items, classified);
   }
 
-  health() {
+  async health() {
     return localModelRegistry.health();
   }
 
